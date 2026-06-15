@@ -64,11 +64,12 @@ jobs:
     - name: Apply Custom Code Modifications
       run: |
         # Подмена геометрии шторки
-        cp -f my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
+        cp -f $GITHUB_WORKSPACE/my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
         
         # Подмена анимаций системы
-        cp -f my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
-        cp -f my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
+        cp -f $GITHUB_WORKSPACE/my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
+        cp -f $GITHUB_WORKSPACE/my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
+
 
     - name: Start Build
       run: |
