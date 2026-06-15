@@ -1,0 +1,81 @@
+name: Build LineageOS 23.2 for Galaxy S10
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Free Disk Space
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo apt-get clean
+
+    - name: Install Build Tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.1-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
+
+    - name: Install Repo Tool
+      run: |
+        mkdir -p ~/bin
+        curl https://googleapis.com > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
+
+    - name: Initialize Repo
+      run: |
+        export PATH=$HOME/bin:$PATH
+        mkdir lineage && cd lineage
+        repo init -u https://github.com -b lineage-23.2 --git-lfs --depth=1
+
+    - name: Setup Local Manifests for S10
+      run: |
+        mkdir -p lineage/.repo/local_manifests
+        cat <<EOF > lineage/.repo/local_manifests/beyond1lte.xml
+        <?xml version="1.0" encoding="UTF-8"?>
+        <manifest>
+          <!-- Дерево устройства -->
+          <project name="LineageOS/android_device_samsung_beyond1lte" path="device/samsung/beyond1lte" remote="github" revision="lineage-23.2" depth="1" />
+          <project name="LineageOS/android_device_samsung_exynos9820-common" path="device/samsung/exynos9820-common" remote="github" revision="lineage-23.2" depth="1" />
+          
+          <!-- Ядро -->
+          <project name="LineageOS/android_kernel_samsung_exynos9820" path="kernel/samsung/exynos9820" remote="github" revision="lineage-23.2" depth="1" />
+          
+          <!-- Драйверы (Вендор) -->
+          <project name="TheMuppets/proprietary_vendor_samsung_beyond1lte" path="vendor/samsung/beyond1lte" remote="github" revision="lineage-23.2" depth="1" />
+          <project name="TheMuppets/proprietary_vendor_samsung_exynos9820-common" path="vendor/samsung/exynos9820-common" remote="github" revision="lineage-23.2" depth="1" />
+          
+          <!-- Дополнительные зависимости -->
+          <project name="LineageOS/android_hardware_samsung" path="hardware/samsung" remote="github" revision="lineage-23.2" depth="1" />
+        </manifest>
+        EOF
+
+    - name: Sync Source Code
+      run: |
+        export PATH=$HOME/bin:$PATH
+        cd lineage
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+    - name: Apply Custom Code Modifications
+      run: |
+        echo "Сюда мы добавим замену файлов шторки и анимаций на следующем шаге!"
+
+    - name: Start Build
+      run: |
+        export PATH=$HOME/bin:$PATH
+        cd lineage
+        source build/envsetup.sh
+        breakfast beyond1lte
+        brunch beyond1lte
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: LineageOS-S10-Custom
+        path: lineage/out/target/product/beyond1lte/*.zip
