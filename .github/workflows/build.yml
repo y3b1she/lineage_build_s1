@@ -55,7 +55,6 @@ jobs:
           <project name="LineageOS/android_hardware_samsung" path="hardware/samsung" remote="github" revision="lineage-23.2" depth="1" />
         </manifest>
         EOF
-
     - name: Sync Source Code
       run: |
         export PATH=$HOME/bin:$PATH
@@ -64,8 +63,12 @@ jobs:
 
     - name: Apply Custom Code Modifications
       run: |
-          cp -f my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
-
+        # Подмена геометрии шторки
+        cp -f my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
+        
+        # Подмена анимаций системы
+        cp -f my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
+        cp -f my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
 
     - name: Start Build
       run: |
