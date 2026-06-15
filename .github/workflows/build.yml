@@ -18,26 +18,28 @@ jobs:
         sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo apt-get clean
 
+    - name: Setup Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Официально ставим стабильный Python на сервер
+
     - name: Install Build Tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3
+        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
 
-    - name: Install Google Repo Tool to Home Directory
+    - name: Install Google Repo Tool
       run: |
-        # Скачиваем скрипт в домашнюю директорию и убираем конфликты с системным /usr/bin/repo
-        mkdir -p $HOME/bin
-        curl https://storage.googleapis.com/git-repo-downloads/repo > $HOME/bin/repo
-        chmod a+x $HOME/bin/repo
-        
-        # Жестко прописываем путь к нашему локальному бинарнику на первое место
-        echo "PATH=$HOME/bin:\$PATH" >> $GITHUB_ENV
+        mkdir -p ~/bin
+        curl https://googleapis.com > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
 
     - name: Initialize LineageOS Repo
       run: |
-        # Вызываем локальный repo напрямую из созданной папки, игнорируя системный
+        export PATH=$HOME/bin:$PATH
         mkdir lineage && cd lineage
-        $HOME/bin/repo init -u https://github.com -b lineage-23.2 --git-lfs --depth=1 --no-repo-verify
+        repo init -u https://github.com -b lineage-23.2 --git-lfs --depth=1 --no-repo-verify
 
     - name: Setup Local Manifests for S10
       run: |
@@ -56,18 +58,26 @@ jobs:
 
     - name: Sync Source Code
       run: |
+        export PATH=$HOME/bin:$PATH
         cd lineage
-        $HOME/bin/repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 
     - name: Apply Custom Code Modifications
       run: |
-        # Копируем ваши файлы шторки и анимаций из изолированной папки main_repo
-        cp -f main_repo/my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
-        cp -f main_repo/my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
-        cp -f main_repo/my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
+        # Скрипт проверит оба варианта путей, чтобы точно найти ваши XML-файлы
+        if [ -d "main_repo/my_changes/my_changes" ]; then
+          MY_PATH="main_repo/my_changes/my_changes"
+        else
+          MY_PATH="main_repo/my_changes"
+        fi
+        
+        cp -f $MY_PATH/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
+        cp -f $MY_PATH/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
+        cp -f $MY_PATH/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
 
     - name: Start Build
       run: |
+        export PATH=$HOME/bin:$PATH
         cd lineage
         source build/envsetup.sh
         breakfast beyond1lte
