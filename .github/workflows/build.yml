@@ -10,6 +10,8 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
+      with:
+        path: main_repo # Скачиваем ваш репозиторий в отдельную безопасную папку
 
     - name: Free Disk Space
       run: |
@@ -24,7 +26,7 @@ jobs:
     - name: Install Repo Tool
       run: |
         mkdir -p ~/bin
-        curl https://googlesource.com | base64 --decode > ~/bin/repo
+        curl https://googleapis.com > ~/bin/repo
         chmod a+x ~/bin/repo
         echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
 
@@ -40,22 +42,15 @@ jobs:
         cat <<EOF > lineage/.repo/local_manifests/beyond1lte.xml
         <?xml version="1.0" encoding="UTF-8"?>
         <manifest>
-          <!-- Дерево устройства -->
           <project name="LineageOS/android_device_samsung_beyond1lte" path="device/samsung/beyond1lte" remote="github" revision="lineage-23.2" depth="1" />
           <project name="LineageOS/android_device_samsung_exynos9820-common" path="device/samsung/exynos9820-common" remote="github" revision="lineage-23.2" depth="1" />
-          
-          <!-- Ядро -->
           <project name="LineageOS/android_kernel_samsung_exynos9820" path="kernel/samsung/exynos9820" remote="github" revision="lineage-23.2" depth="1" />
-          
-          <!-- Драйверы (Вендор) -->
           <project name="TheMuppets/proprietary_vendor_samsung_beyond1lte" path="vendor/samsung/beyond1lte" remote="github" revision="lineage-23.2" depth="1" />
           <project name="TheMuppets/proprietary_vendor_samsung_exynos9820-common" path="vendor/samsung/exynos9820-common" remote="github" revision="lineage-23.2" depth="1" />
-          
-          <!-- Дополнительные зависимости -->
           <project name="LineageOS/android_hardware_samsung" path="hardware/samsung" remote="github" revision="lineage-23.2" depth="1" />
         </manifest>
         EOF
-        
+
     - name: Sync Source Code
       run: |
         export PATH=$HOME/bin:$PATH
@@ -64,16 +59,10 @@ jobs:
 
     - name: Apply Custom Code Modifications
       run: |
-        # Переходим строго в корень репозитория, где лежит папка my_changes
-        cd $GITHUB_WORKSPACE
-        
-        # Проверяем, что файлы на месте (для логов сервера)
-        ls -la my_changes/
-        
-        # Копируем файлы в дерево исходников Android
-        cp -f my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
-        cp -f my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
-        cp -f my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
+        # Копируем файлы из изолированной папки main_repo, которую repo sync не мог тронуть
+        cp -f main_repo/my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
+        cp -f main_repo/my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
+        cp -f main_repo/my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
 
     - name: Start Build
       run: |
