@@ -63,12 +63,16 @@ jobs:
 
     - name: Apply Custom Code Modifications
       run: |
+        # Абсолютный путь к вашей кастомной папке
+        MY_DIR="/home/runner/work/lineage_build_s1/lineage_build_s1/my_changes"
+        
         # Подмена геометрии шторки
-        cp -f $GITHUB_WORKSPACE/my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
+        cp -f "$MY_DIR/dimens.xml" lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
         
         # Подмена анимаций системы
-        cp -f $GITHUB_WORKSPACE/my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
-        cp -f $GITHUB_WORKSPACE/my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
+        cp -f "$MY_DIR/activity_open_enter.xml" lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
+        cp -f "$MY_DIR/activity_open_exit.xml" lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
+
 
 
     - name: Start Build
