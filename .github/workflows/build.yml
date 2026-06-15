@@ -64,7 +64,8 @@ jobs:
 
     - name: Apply Custom Code Modifications
       run: |
-        echo "Сюда мы добавим замену файлов шторки и анимаций на следующем шаге!"
+          cp -f my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
+
 
     - name: Start Build
       run: |
