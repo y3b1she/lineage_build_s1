@@ -55,11 +55,7 @@ jobs:
           <project name="LineageOS/android_hardware_samsung" path="hardware/samsung" remote="github" revision="lineage-23.2" depth="1" />
         </manifest>
         EOF
-    - name: Save Custom Files to Temp
-      run: |
-        mkdir -p /tmp/my_changes
-        cp -r my_changes/* /tmp/my_changes/
-
+        
     - name: Sync Source Code
       run: |
         export PATH=$HOME/bin:$PATH
@@ -68,10 +64,16 @@ jobs:
 
     - name: Apply Custom Code Modifications
       run: |
-        # Копируем файлы из временной папки в исходники Android
-        cp -f /tmp/my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
-        cp -f /tmp/my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
-        cp -f /tmp/my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
+        # Переходим строго в корень репозитория, где лежит папка my_changes
+        cd $GITHUB_WORKSPACE
+        
+        # Проверяем, что файлы на месте (для логов сервера)
+        ls -la my_changes/
+        
+        # Копируем файлы в дерево исходников Android
+        cp -f my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
+        cp -f my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
+        cp -f my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
 
     - name: Start Build
       run: |
