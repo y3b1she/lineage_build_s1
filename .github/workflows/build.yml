@@ -24,7 +24,7 @@ jobs:
     - name: Install Repo Tool
       run: |
         mkdir -p ~/bin
-        curl https://googleapis.com > ~/bin/repo
+        curl https://googlesource.com | base64 --decode > ~/bin/repo
         chmod a+x ~/bin/repo
         echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
 
