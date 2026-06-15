@@ -23,35 +23,53 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3
 
-    - name: Download Base Android Source Code
+    - name: Install Google Repo Tool
       run: |
-        # Скачиваем только корневую структуру сборщика Android (это быстро и без сбоев)
-        git clone --depth=1 https://github.com/LineageOS/android.git -b lineage-23.2 lineage
-        cd lineage
-        
-        # Скачиваем базовые манифесты
-        git clone --depth=1 https://github.com -b lineage-23.2 .repo/manifests
+        # Проверенный способ установки Repo напрямую из исходников Google
+        mkdir -p ~/bin
+        curl https://googleapis.com > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
 
-    - name: Setup Device Trees and Drivers via Native Git
+    - name: Initialize LineageOS Repo
       run: |
+        export PATH=$HOME/bin:$PATH
+        mkdir lineage && cd lineage
+        # Инициализируем репозиторий с флагом отключения верификации, чтобы не было сетевых сбоев
+        repo init -u https://github.com/LineageOS/android.git -b lineage-23.2 --git-lfs --depth=1 --no-repo-verify
+
+    - name: Setup Local Manifests for S10
+      run: |
+        mkdir -p lineage/.repo/local_manifests
+        cat <<EOF > lineage/.repo/local_manifests/beyond1lte.xml
+        <?xml version="1.0" encoding="UTF-8"?>
+        <manifest>
+          <project name="LineageOS/android_device_samsung_beyond1lte" path="device/samsung/beyond1lte" remote="github" revision="lineage-23.2" depth="1" />
+          <project name="LineageOS/android_device_samsung_exynos9820-common" path="device/samsung/exynos9820-common" remote="github" revision="lineage-23.2" depth="1" />
+          <project name="LineageOS/android_kernel_samsung_exynos9820" path="kernel/samsung/exynos9820" remote="github" revision="lineage-23.2" depth="1" />
+          <project name="TheMuppets/proprietary_vendor_samsung_beyond1lte" path="vendor/samsung/beyond1lte" remote="github" revision="lineage-23.2" depth="1" />
+          <project name="TheMuppets/proprietary_vendor_samsung_exynos9820-common" path="vendor/samsung/exynos9820-common" remote="github" revision="lineage-23.2" depth="1" />
+          <project name="LineageOS/android_hardware_samsung" path="hardware/samsung" remote="github" revision="lineage-23.2" depth="1" />
+        </manifest>
+        EOF
+
+    - name: Sync Source Code
+      run: |
+        export PATH=$HOME/bin:$PATH
         cd lineage
-        # Клонируем дерево устройств и ядро напрямую, минуя утилиту repo
-        git clone --depth=1 https://github.com -b lineage-23.2 device/samsung/beyond1lte
-        git clone --depth=1 https://github.com -b lineage-23.2 device/samsung/exynos9820-common
-        git clone --depth=1 https://github.com -b lineage-23.2 kernel/samsung/exynos9820
-        git clone --depth=1 https://github.com -b lineage-23.2 vendor/samsung/beyond1lte
-        git clone --depth=1 https://github.com -b lineage-23.2 vendor/samsung/exynos9820-common
-        git clone --depth=1 https://github.com -b lineage-23.2 hardware/samsung
+        # Синхронизация в оптимизированном режиме, чтобы не забить диск сервера
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 
     - name: Apply Custom Code Modifications
       run: |
-        # Применяем ваши шторки и анимации
+        # Копируем ваши файлы шторки и анимаций
         cp -f main_repo/my_changes/dimens.xml lineage/frameworks/base/packages/SystemUI/res/values/dimens.xml
         cp -f main_repo/my_changes/activity_open_enter.xml lineage/frameworks/base/core/res/res/anim/activity_open_enter.xml
         cp -f main_repo/my_changes/activity_open_exit.xml lineage/frameworks/base/core/res/res/anim/activity_open_exit.xml
 
     - name: Start Build
       run: |
+        export PATH=$HOME/bin:$PATH
         cd lineage
         source build/envsetup.sh
         breakfast beyond1lte
