@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false"
+    android:zAdjustment="top">
+
+    <!-- Прозрачность: быстрый выход в 1.0 (iOS не держит долго полупрозрачное состояние) -->
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:fillEnabled="true"
+        android:fillBefore="true"
+        android:fillAfter="true"
+        android:interpolator="@android:interpolator/decelerate_cubic"
+        android:duration="250" />
+
+    <!-- Масштаб: в iOS 18 приложения вылетают "из иконки" — старт с меньшего размера (0.85) -->
+    <scale
+        android:fromXScale="0.85"
+        android:toXScale="1.0"
+        android:fromYScale="0.85"
+        android:toYScale="1.0"
+        android:pivotX="50.0%"
+        android:pivotY="50.0%"
+        android:fillEnabled="true"
+        android:fillBefore="true"
+        android:fillAfter="true"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:duration="400" />
+        
+</set>
