@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Скругление углов плиток в шторке (половина высоты для идеального круга/капсулы) -->
+    <dimen name="qs_corner_radius">28dp</dimen>
+
+    <!-- Высота одной плитки в шторке быстрых настроек (оригинальный размер iOS 18) -->
+    <dimen name="qs_tile_height">56dp</dimen>
+
+    <!-- Отступы между плитками по вертикали и горизонтали -->
+    <dimen name="qs_tile_margin_vertical">12dp</dimen>
+    <dimen name="qs_tile_margin_horizontal">12dp</dimen>
+
+    <!-- Боковые отступы всей шторки от краёв экрана -->
+    <dimen name="notification_side_paddings">16dp</dimen>
+</resources>
